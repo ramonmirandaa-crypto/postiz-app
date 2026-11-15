@@ -14,6 +14,9 @@
 body {
   background: var(--new-bgColor) !important;
   color: var(--new-btn-text);
+  min-height: 100vh;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 body * {
@@ -29,6 +32,17 @@ body * {
 }
 #tooltip {
   z-index: 10000;
+}
+
+.app-shell-surface {
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18);
+}
+
+.calendar-soft-grid {
+  background-image:
+    linear-gradient(to right, rgb(var(--new-textColor) / 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(var(--new-textColor) / 0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 .box:after {
   border-radius: 50px;

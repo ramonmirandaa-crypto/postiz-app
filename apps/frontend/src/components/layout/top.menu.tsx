@@ -96,6 +96,34 @@ export const useMenuItem = () => {
       path: '/analytics',
     },
     {
+      name: t('social_analyzer', 'Social Analyzer'),
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="none"
+        >
+          <path
+            d="M8.75 14.5C11.9256 14.5 14.5 11.9256 14.5 8.75C14.5 5.57436 11.9256 3 8.75 3C5.57436 3 3 5.57436 3 8.75C3 11.9256 5.57436 14.5 8.75 14.5Z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M12.9 12.9L17 17M6.5 8.75H11M8.75 6.5V11"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ),
+      path: '/social-analyzer',
+    },
+    {
       name: t('media', 'Media'),
       icon: (
         <svg

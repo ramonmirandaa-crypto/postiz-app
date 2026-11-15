@@ -191,6 +191,18 @@ export class OrganizationRepository {
             createdAt: true,
           },
         },
+        Integration: {
+          where: {
+            deletedAt: null,
+            disabled: false,
+          },
+          select: {
+            name: true,
+            picture: true,
+            profile: true,
+            providerIdentifier: true,
+          },
+        },
       },
     });
   }

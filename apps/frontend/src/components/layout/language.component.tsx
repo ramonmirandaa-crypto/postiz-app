@@ -24,6 +24,7 @@ countries.registerLocale(countriesEn);
 const getCountryCodeForFlag = (languageCode: string) => {
   // For multi-region languages, here are some common defaults
   if (languageCode === 'en') return 'GB';
+  if (languageCode === 'pt') return 'BR';
   if (languageCode === 'es') return 'ES';
   if (languageCode === 'ar') return 'SA';
   if (languageCode === 'zh') return 'CN';
@@ -79,6 +80,10 @@ export const ChangeLanguageComponent = () => {
 
   // Function to get language name in its native script
   const getLanguageName = useCallback((code: string) => {
+    if (code === 'pt') {
+      return 'Português (Brasil)';
+    }
+
     try {
       // Use browser's Intl API to get language name in native script
       const displayNames = new Intl.DisplayNames([code], {

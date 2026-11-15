@@ -500,16 +500,16 @@ export const LaunchesComponent = () => {
         <div
           className={clsx(
             'flex relative flex-col',
-            collapseMenu === '1' ? 'group sidebar w-[100px]' : 'w-[260px]'
+            collapseMenu === '1' ? 'group sidebar w-[100px]' : 'w-[284px]'
           )}
         >
           <div
             className={clsx(
-              'bg-newBgColorInner p-[20px] flex flex-col gap-[15px] transition-all absolute start-0 top-0 w-full h-full overflow-x-hidden overflow-y-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor'
+              'bg-newBgColorInner p-[18px] flex flex-col gap-[16px] transition-all absolute start-0 top-0 w-full h-full overflow-x-hidden overflow-y-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor border-e border-newTableBorder'
             )}
           >
             <div className="flex items-center">
-              <h2 className="group-[.sidebar]:hidden flex-1 text-[20px] font-[500]">
+              <h2 className="group-[.sidebar]:hidden flex-1 text-[20px] font-[700]">
                 {t('channels')}
               </h2>
               <div
@@ -544,6 +544,26 @@ export const LaunchesComponent = () => {
                   billingEnabled && <GeneratorComponent />}
               </div>
             </div>
+            {collapseMenu === '0' && (
+              <div className="grid grid-cols-2 gap-[8px]">
+                <div className="rounded-[10px] border border-newTableBorder bg-newTableHeader p-[10px]">
+                  <div className="text-[11px] text-newTableText">
+                    {t('connected', 'Connected')}
+                  </div>
+                  <div className="text-[20px] font-[700] leading-[1.2]">
+                    {sortedIntegrations.length}
+                  </div>
+                </div>
+                <div className="rounded-[10px] border border-newTableBorder bg-newTableHeader p-[10px]">
+                  <div className="text-[11px] text-newTableText">
+                    {t('active', 'Active')}
+                  </div>
+                  <div className="text-[20px] font-[700] leading-[1.2] text-newTableTextFocused">
+                    {totalNonDisabledChannels}
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="gap-[32px] flex flex-col select-none flex-1">
               {sortedIntegrations.length === 0 && collapseMenu === '0' && (
                 <div className="flex-1 max-h-[500px] justify-center items-center flex">
@@ -592,9 +612,9 @@ export const LaunchesComponent = () => {
             </div>
           </div>
         </div>
-        <div className="bg-newBgColorInner flex-1 flex-col flex p-[20px] gap-[12px]">
+        <div className="bg-newBgColorInner flex-1 flex-col flex p-[18px] gap-[14px] calendar-soft-grid">
           <Filters />
-          <div className="flex-1 flex">
+          <div className="flex-1 flex min-h-0">
             <Calendar />
           </div>
         </div>

@@ -28,7 +28,7 @@ export class BadBody extends ApplicationFailure {
 
 export class NotEnoughScopes {
   constructor(
-    public message = 'Not enough scopes, when choosing a provider, please add all the scopes'
+    public message = 'Permissoes insuficientes. Ao escolher um provedor, permita todas as permissoes solicitadas.'
   ) {}
 }
 
@@ -174,8 +174,11 @@ export abstract class SocialAbstract {
 
   checkScopes(required: string[], got: string | string[]) {
     if (Array.isArray(got)) {
-      if (!required.every((scope) => got.includes(scope))) {
-        throw new NotEnoughScopes();
+      const missing = required.filter((scope) => !got.includes(scope));
+      if (missing.length) {
+        throw new NotEnoughScopes(
+          `Permissoes insuficientes. Faltam: ${missing.join(', ')}`
+        );
       }
 
       return true;
@@ -185,8 +188,11 @@ export abstract class SocialAbstract {
 
     const splitType = newGot.indexOf(',') > -1 ? ',' : ' ';
     const gotArray = newGot.split(splitType);
-    if (!required.every((scope) => gotArray.includes(scope))) {
-      throw new NotEnoughScopes();
+    const missing = required.filter((scope) => !gotArray.includes(scope));
+    if (missing.length) {
+      throw new NotEnoughScopes(
+        `Permissoes insuficientes. Faltam: ${missing.join(', ')}`
+      );
     }
 
     return true;

@@ -1,0 +1,990 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AutoTotem Media Composition</title>
+    <style>
+      :root {
+        --ink: #061126;
+        --green: #00c98b;
+        --green-deep: #007a55;
+        --teal: #0a4b4b;
+        --soft: #f3f7f6;
+        --muted-dark: #d7e5ea;
+        --muted-light: #45556c;
+        --slate: #0f172a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body,
+      #app {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      body {
+        font-family: "DejaVu Sans", Arial, sans-serif;
+        background: var(--ink);
+      }
+
+      .canvas {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background: var(--ink);
+        color: white;
+      }
+
+      .canvas.light {
+        background:
+          radial-gradient(circle at 18% 10%, rgba(0, 201, 139, 0.20), transparent 30%),
+          radial-gradient(circle at 82% 18%, rgba(14, 165, 233, 0.12), transparent 32%),
+          linear-gradient(180deg, rgba(255,255,255,0.95), rgba(243,247,246,0.96));
+        color: var(--ink);
+      }
+
+      .grid::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: 0.20;
+        background-image:
+          linear-gradient(rgba(15, 23, 42, 0.10) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(15, 23, 42, 0.10) 1px, transparent 1px);
+        background-size: 52px 52px;
+      }
+
+      .dark-grid::before {
+        opacity: 0.14;
+        background-image:
+          linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px);
+      }
+
+      .blob {
+        position: absolute;
+        border-radius: 9999px;
+        background: var(--teal);
+        opacity: 0.78;
+      }
+
+      .blob.a {
+        width: 62vmin;
+        height: 62vmin;
+        left: -24vmin;
+        bottom: -28vmin;
+      }
+
+      .blob.b {
+        width: 48vmin;
+        height: 48vmin;
+        right: -18vmin;
+        top: -18vmin;
+      }
+
+      .brand {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 0.85em;
+        font-weight: 600;
+      }
+
+      .mark {
+        position: relative;
+        width: 1.62em;
+        height: 1.62em;
+        border-radius: 0.45em;
+        background: var(--ink);
+        color: white;
+        display: grid;
+        place-items: center;
+        font-weight: 900;
+        line-height: 1;
+      }
+
+      .dark .mark {
+        background: transparent;
+      }
+
+      .mark .dot {
+        position: absolute;
+        right: 0.12em;
+        bottom: 0.16em;
+        width: 0.22em;
+        height: 0.22em;
+        border-radius: 50%;
+        background: var(--green);
+      }
+
+      .kicker {
+        font-family: "DejaVu Sans Mono", monospace;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-weight: 800;
+        color: var(--green-deep);
+      }
+
+      .dark .kicker {
+        color: #8deccb;
+      }
+
+      .headline {
+        position: relative;
+        z-index: 2;
+        margin: 0;
+        line-height: 0.98;
+        letter-spacing: 0;
+        font-weight: 800;
+      }
+
+      .headline.soft {
+        font-weight: 500;
+      }
+
+      .subtitle {
+        position: relative;
+        z-index: 2;
+        margin: 0;
+        line-height: 1.34;
+        color: var(--muted-light);
+      }
+
+      .dark .subtitle {
+        color: var(--muted-dark);
+      }
+
+      .pill {
+        position: relative;
+        z-index: 2;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        background: var(--green);
+        color: var(--ink);
+        font-weight: 800;
+      }
+
+      .cockpit {
+        position: relative;
+        z-index: 2;
+        border: 1px solid rgba(255,255,255,0.13);
+        border-radius: 42px;
+        background: #0f172a;
+        box-shadow: 0 32px 80px -42px rgba(6, 17, 38, 0.88);
+        color: white;
+        overflow: hidden;
+      }
+
+      .cockpit .top {
+        height: 76px;
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 0 28px;
+        border-bottom: 1px solid rgba(255,255,255,0.10);
+      }
+
+      .lights {
+        display: flex;
+        gap: 9px;
+      }
+
+      .lights span {
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+      }
+
+      .metric-grid {
+        display: grid;
+        gap: 18px;
+        padding: 26px;
+      }
+
+      .metric {
+        border-radius: 28px;
+        border: 1px solid rgba(255,255,255,0.11);
+        background: rgba(255,255,255,0.055);
+        padding: 24px;
+      }
+
+      .metric .value {
+        margin-top: 18px;
+        font-family: "DejaVu Sans Mono", monospace;
+        font-weight: 800;
+        line-height: 1;
+      }
+
+      .metric .label {
+        margin-top: 10px;
+        color: #cbd5e1;
+      }
+
+      .hardware-stage {
+        position: relative;
+        z-index: 2;
+        border-radius: 38px;
+        border: 1px solid rgba(255,255,255,0.16);
+        background:
+          linear-gradient(145deg, rgba(255,255,255,0.96), rgba(220,239,238,0.88)),
+          var(--soft);
+        box-shadow: 0 36px 90px -48px rgba(6, 17, 38, 0.9);
+        color: var(--ink);
+        overflow: hidden;
+      }
+
+      .hardware-stage::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, rgba(0,201,139,0.10), transparent 48%),
+          linear-gradient(rgba(6,17,38,0.06) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(6,17,38,0.06) 1px, transparent 1px);
+        background-size: auto, 38px 38px, 38px 38px;
+      }
+
+      .hardware-photo {
+        position: relative;
+        min-height: 390px;
+        padding: 34px 32px 132px;
+        display: grid;
+        place-items: center;
+      }
+
+      .hardware-stage.small .hardware-photo {
+        min-height: 308px;
+        padding: 20px 22px 108px;
+      }
+
+      .hardware-stage.hero .hardware-photo {
+        min-height: 610px;
+        padding: 44px 44px 158px;
+      }
+
+      .hardware-photo img {
+        display: block;
+        width: 100%;
+        max-height: 510px;
+        object-fit: contain;
+        filter: drop-shadow(0 26px 34px rgba(6,17,38,0.26));
+      }
+
+      .hardware-stage.portrait .hardware-photo img {
+        width: auto;
+        max-width: 78%;
+      }
+
+      .hardware-stage.small .hardware-photo img {
+        max-height: 250px;
+      }
+
+      .hardware-stage.hero .hardware-photo img {
+        max-height: 500px;
+      }
+
+      .hardware-copy {
+        position: absolute;
+        left: 26px;
+        right: 26px;
+        bottom: 24px;
+        border-radius: 26px;
+        border: 1px solid rgba(255,255,255,0.16);
+        background: rgba(6,17,38,0.92);
+        color: white;
+        padding: 22px 24px;
+      }
+
+      .hardware-stage.small .hardware-copy {
+        left: 18px;
+        right: 18px;
+        bottom: 18px;
+        padding: 16px 18px;
+        border-radius: 21px;
+      }
+
+      .hardware-copy strong {
+        display: block;
+        font-size: 27px;
+        line-height: 1.06;
+      }
+
+      .hardware-stage.small .hardware-copy strong {
+        font-size: 20px;
+      }
+
+      .hardware-copy span {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted-dark);
+        font-size: 17px;
+      }
+
+      .hardware-stage.small .hardware-copy span {
+        font-size: 13px;
+      }
+
+      .hardware-specs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 15px;
+      }
+
+      .hardware-specs i {
+        font-style: normal;
+        border-radius: 999px;
+        background: rgba(0,201,139,0.16);
+        color: #8deccb;
+        padding: 7px 10px;
+        font: 800 11px "DejaVu Sans Mono", monospace;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .tablet-stage {
+        position: relative;
+        z-index: 2;
+        height: 100%;
+        min-height: 440px;
+        display: grid;
+        place-items: center;
+        border-radius: 38px;
+        background:
+          linear-gradient(145deg, rgba(255,255,255,0.96), rgba(225,234,241,0.9)),
+          var(--soft);
+        box-shadow: 0 36px 90px rgba(15, 23, 42, 0.24);
+        overflow: hidden;
+      }
+
+      .tablet-stage::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 22% 16%, rgba(0,201,139,0.20), transparent 25%),
+          linear-gradient(rgba(6,17,38,0.06) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(6,17,38,0.06) 1px, transparent 1px);
+        background-size: auto, 40px 40px, 40px 40px;
+      }
+
+      .tablet-device {
+        position: relative;
+        z-index: 1;
+        width: 88%;
+        max-width: 660px;
+        aspect-ratio: 1;
+      }
+
+      .tablet-device img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 26px 30px rgba(6,17,38,0.22));
+      }
+
+      .tablet-stage.compact {
+        min-height: 360px;
+      }
+
+      .tablet-stage.compact .tablet-device {
+        width: 92%;
+      }
+
+      .tablet-screen-demo {
+        position: absolute;
+        z-index: 2;
+        left: 14.5%;
+        right: 15.7%;
+        top: 29.7%;
+        height: 39%;
+        border-radius: 12px;
+        background: white;
+        color: var(--ink);
+        padding: 3.5%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow: hidden;
+      }
+
+      .tablet-screen-demo::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 16% 18%, rgba(0,201,139,0.22), transparent 28%),
+          linear-gradient(rgba(6,17,38,0.06) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(6,17,38,0.06) 1px, transparent 1px);
+        background-size: auto, 24px 24px, 24px 24px;
+      }
+
+      .tablet-screen-demo > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .tablet-screen-demo h4 {
+        margin: 0;
+        font-size: 32px;
+        line-height: 1.03;
+      }
+
+      .tablet-stage.compact .tablet-screen-demo h4 {
+        font-size: 23px;
+      }
+
+      .tablet-products {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .tablet-products span {
+        min-height: 54px;
+        border-radius: 16px;
+        background: #eef4f5;
+        padding: 11px;
+        font-size: 15px;
+        font-weight: 800;
+      }
+
+      .tablet-stage.compact .tablet-products span {
+        min-height: 40px;
+        border-radius: 13px;
+        padding: 8px;
+        font-size: 11px;
+      }
+
+      .tablet-products span:first-child {
+        background: var(--green);
+      }
+
+      .tablet-cta {
+        height: 42px;
+        border-radius: 15px;
+        background: var(--ink);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        font-weight: 900;
+      }
+
+      .tablet-stage.compact .tablet-cta {
+        height: 32px;
+        border-radius: 12px;
+        font-size: 11px;
+      }
+
+      .tablet-ui {
+        position: absolute;
+        z-index: 2;
+        left: 8%;
+        right: 8%;
+        bottom: 9%;
+        border-radius: 24px;
+        background: rgba(6,17,38,0.92);
+        color: white;
+        padding: 20px 22px;
+        box-shadow: 0 22px 48px rgba(6,17,38,0.28);
+      }
+
+      .tablet-stage.compact .tablet-ui {
+        padding: 15px 17px;
+        border-radius: 20px;
+      }
+
+      .tablet-ui .row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .tablet-ui strong {
+        display: block;
+        font-size: 24px;
+        line-height: 1.05;
+      }
+
+      .tablet-stage.compact .tablet-ui strong {
+        font-size: 18px;
+      }
+
+      .tablet-ui b {
+        border-radius: 999px;
+        background: var(--green);
+        color: var(--ink);
+        padding: 11px 14px;
+        font-size: 16px;
+      }
+
+      .tablet-stage.compact .tablet-ui b {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+      .tablet-ui .steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+        margin-top: 15px;
+      }
+
+      .tablet-ui .steps span {
+        border-radius: 14px;
+        background: rgba(255,255,255,0.10);
+        color: var(--muted-dark);
+        padding: 10px;
+        font: 800 11px "DejaVu Sans Mono", monospace;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-align: center;
+      }
+
+      .bars {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        align-items: end;
+        gap: 10px;
+        height: 112px;
+        margin-top: 26px;
+      }
+
+      .bars span {
+        border-radius: 14px;
+        background: linear-gradient(180deg, #77d4ff, var(--green));
+      }
+
+      .phone {
+        position: relative;
+        z-index: 2;
+        height: 100%;
+        border-radius: 58px;
+        background: var(--ink);
+        padding: 18px;
+        box-shadow: 0 36px 90px rgba(15, 23, 42, 0.34);
+        overflow: hidden;
+      }
+
+      .screen {
+        height: 100%;
+        border-radius: 40px;
+        background: white;
+        color: var(--ink);
+        padding: 42px;
+      }
+
+      .product-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        margin-top: 34px;
+      }
+
+      .product-card {
+        min-height: 132px;
+        border-radius: 28px;
+        background: #f1f5f9;
+        padding: 22px;
+      }
+
+      .product-card.hot {
+        background: var(--green);
+      }
+
+      .screen-button {
+        margin-top: 34px;
+        height: 64px;
+        border-radius: 24px;
+        background: var(--ink);
+      }
+
+      .screen-button.green {
+        background: var(--green);
+      }
+
+      .scene {
+        position: absolute;
+        inset: 0;
+        padding: 8.2vh 7.4vw;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 2.7vh;
+        opacity: var(--scene-opacity, 1);
+        transform: translateY(var(--scene-y, 0)) scale(var(--scene-scale, 1));
+      }
+
+      .scene .brand {
+        position: absolute;
+        top: 6vh;
+        left: 7.4vw;
+        font-size: clamp(28px, 4.6vw, 50px);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const asset = params.get("asset") || "instagram-post-fila";
+      let renderTime = Number(params.get("t") || 0);
+
+      const app = document.getElementById("app");
+      window.__setRenderTime = (seconds) => {
+        renderTime = Number(seconds || 0);
+        render();
+      };
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function smooth(value) {
+        const t = clamp(value, 0, 1);
+        return t * t * (3 - 2 * t);
+      }
+
+      function sceneMotion(start, end) {
+        const enter = smooth((renderTime - start) / 0.55);
+        const exit = 1 - smooth((renderTime - (end - 0.55)) / 0.55);
+        const opacity = clamp(Math.min(enter, exit), 0, 1);
+        const y = (1 - enter) * 34 + (1 - exit) * -26;
+        const scale = 0.985 + enter * 0.015;
+        return `--scene-opacity:${opacity};--scene-y:${y}px;--scene-scale:${scale};`;
+      }
+
+      function brand(dark = false) {
+        return `
+          <div class="brand ${dark ? "dark" : ""}">
+            <div class="mark"><span>A</span><i class="dot"></i></div>
+            <span>AutoTotem</span>
+          </div>
+        `;
+      }
+
+      function cockpit(size = "large") {
+        const big = size === "large";
+        return `
+          <div class="cockpit">
+            <div class="top">
+              <div class="lights"><span style="background:#fb7185"></span><span style="background:#fbbf24"></span><span style="background:#00c98b"></span></div>
+              <strong style="font-size:${big ? 24 : 18}px">AutoTotem cockpit</strong>
+              <span style="margin-left:auto;border:1px solid rgba(0,201,139,.35);border-radius:999px;padding:7px 13px;color:#8deccb;font:700 11px 'DejaVu Sans Mono';letter-spacing:.16em">AO VIVO</span>
+            </div>
+            <div class="metric-grid" style="grid-template-columns:${big ? "1.15fr .85fr" : "1fr"}">
+              <div class="metric">
+                <div class="kicker">Fluxo publicado</div>
+                <div class="value" style="font-size:${big ? 58 : 44}px">128</div>
+                <div class="label" style="font-size:${big ? 20 : 16}px">interações no autoatendimento</div>
+                <div class="bars"><span style="height:52%"></span><span style="height:76%"></span><span style="height:44%"></span><span style="height:88%"></span><span style="height:68%"></span><span style="height:92%"></span></div>
+              </div>
+              ${big ? `
+              <div style="display:grid;gap:18px">
+                <div class="metric"><div class="kicker">Pagamentos</div><div class="value" style="font-size:38px">R$ 4.990</div><div class="label">Pix confirmado</div></div>
+                <div class="metric"><div class="kicker">Status</div><div class="value" style="font-size:38px">Pronto</div><div class="label">tablet em tela cheia</div></div>
+              </div>` : ""}
+            </div>
+          </div>
+        `;
+      }
+
+      function totemMockup(size = "large", variant = "tower") {
+        const small = size === "small";
+        const hero = size === "hero";
+        const isPortrait = variant === "ttav";
+        const image = isPortrait
+          ? "./assets/foton-ttav18-real.jpg"
+          : "./assets/foton-tower20-real.jpg";
+        const title = isPortrait ? "Totem real para tablet" : "Pedestal real para tablet";
+        const subtitle = isPortrait
+          ? "Estrutura para tablet com AutoTotem em tela cheia."
+          : "Pedestal para tablet com fluxo touch publicado.";
+        return `
+          <div class="hardware-stage ${small ? "small" : ""} ${hero ? "hero" : ""} ${isPortrait ? "portrait" : ""}">
+            <div class="hardware-photo">
+              <img src="${image}" alt="${title}" />
+              <div class="hardware-copy">
+                <strong>${title}</strong>
+                <span>${subtitle}</span>
+                <div class="hardware-specs">
+                  <i>tablet real</i>
+                  <i>kiosk</i>
+                  ${small ? "" : "<i>pix pronto</i>"}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function tabletMockup(compact = false) {
+        return `
+          <div class="tablet-stage ${compact ? "compact" : ""}">
+            <div class="tablet-device">
+              <img src="./assets/samsung-tab-a9-plus-real.jpg" alt="Tablet Samsung Galaxy Tab A9+ real" />
+              <div class="tablet-screen-demo">
+                <div class="kicker" style="font-size:${compact ? 10 : 13}px">pedido touch</div>
+                <h4>Monte seu pedido</h4>
+                <div class="tablet-products"><span>Combo</span><span>Bebida</span></div>
+                <div class="tablet-cta">Pagar com Pix</div>
+              </div>
+            </div>
+            <div class="tablet-ui">
+              <div class="row">
+                <strong>AutoTotem<br>em tablet real</strong>
+                <b>Pix</b>
+              </div>
+              <div class="steps"><span>pedido</span><span>cadastro</span><span>status</span></div>
+            </div>
+          </div>
+        `;
+      }
+
+      function staticSquare() {
+        app.innerHTML = `
+          <main class="canvas dark dark-grid">
+            <div class="blob a"></div><div class="blob b"></div>
+            <section style="position:relative;z-index:2;padding:82px;height:100%;display:flex;flex-direction:column">
+              ${brand(true)}
+              <h1 class="headline soft" style="font-size:78px;max-width:850px;margin-top:142px">Atenda mais sem<br>sobrecarregar sua equipe.</h1>
+              <p class="subtitle dark" style="font-size:34px;margin-top:38px">Pedido, cadastro, triagem e Pix em um fluxo self-service.</p>
+              <div style="margin-top:auto;display:flex;align-items:end;justify-content:space-between;gap:34px">
+                <div class="pill" style="height:78px;padding:0 44px;font-size:30px">autototem.com.br</div>
+                <div style="width:390px">${totemMockup("small", "tower")}</div>
+              </div>
+            </section>
+          </main>
+        `;
+      }
+
+      function staticStory() {
+        app.innerHTML = `
+          <main class="canvas light grid">
+            <section style="position:relative;z-index:2;padding:96px 80px;height:100%;display:flex;flex-direction:column">
+              ${brand(false)}
+              <div class="kicker" style="font-size:22px;margin-top:116px">totem real em tablet</div>
+              <h1 class="headline" style="font-size:84px;max-width:870px;margin-top:34px">Tenha seu totem.<br>Atenda mais no balcão.</h1>
+              <p class="subtitle" style="font-size:36px;max-width:850px;margin-top:36px">Fluxo guiado para pedido, cadastro, triagem e Pix sem sobrecarregar a equipe.</p>
+              <div style="margin-top:70px">${totemMockup("hero", "tower")}</div>
+              <div class="pill" style="height:86px;padding:0 48px;font-size:30px;margin-top:auto;width:max-content">Criar meu totem</div>
+            </section>
+          </main>
+        `;
+      }
+
+      function staticFacebook() {
+        app.innerHTML = `
+          <main class="canvas dark">
+            <div class="blob a"></div><div class="blob b"></div>
+            <section style="position:relative;z-index:2;padding:64px 72px;height:100%;display:grid;grid-template-columns:1.05fr .95fr;gap:42px;align-items:center">
+              <div>
+                ${brand(true)}
+                <h1 class="headline soft" style="font-size:70px;max-width:760px;margin-top:86px">Atenda mais sem<br>sobrecarregar sua equipe.</h1>
+                <p class="subtitle dark" style="font-size:29px;margin-top:28px">Pedido, cadastro, triagem e Pix em um fluxo self-service.</p>
+                <div style="margin-top:64px;display:flex;align-items:center;gap:32px">
+                  <div class="pill" style="height:62px;padding:0 31px;font-size:27px">autototem.com.br</div>
+                  <div style="font:25px 'DejaVu Sans Mono';color:var(--green)">@auto.totem</div>
+                </div>
+              </div>
+              <div>${totemMockup("large", "tower")}</div>
+            </section>
+          </main>
+        `;
+      }
+
+      function staticYoutube() {
+        app.innerHTML = `
+          <main class="canvas light grid">
+            <section style="position:relative;z-index:2;padding:58px 72px;height:100%;display:grid;grid-template-columns:1.05fr .95fr;gap:54px;align-items:center">
+              <div>
+                ${brand(false)}
+                <div class="kicker" style="font-size:21px;margin-top:96px">demo do produto</div>
+                <h1 class="headline" style="font-size:76px;margin-top:28px">Veja o totem<br>em ação.</h1>
+                <p class="subtitle" style="font-size:32px;margin-top:28px">Do pedido ao Pix em uma tela simples.</p>
+                <div class="pill" style="height:70px;padding:0 42px;font-size:28px;margin-top:58px;background:var(--ink);color:white">Ver em ação</div>
+              </div>
+              <div style="height:520px">${tabletMockup()}</div>
+            </section>
+          </main>
+        `;
+      }
+
+      const campaigns = {
+        "fila-pico": {
+          kicker: "horário de pico",
+          title: "Fila menor.<br>Equipe livre.",
+          subtitle: "Self-service para pedidos simples no balcão.",
+          secondTitle: "Pedido, cadastro<br>e Pix.",
+          secondSubtitle: "Um fluxo touch que o cliente entende em segundos.",
+          finalTitle: "Atenda mais<br>sem sobrecarga.",
+          finalSubtitle: "AutoTotem em tablet, web ou kiosk.",
+        },
+        gargalo: {
+          kicker: "operação presencial",
+          title: "Menos gargalo<br>no atendimento.",
+          subtitle: "Tarefas repetitivas saem da fila e entram no totem.",
+          secondTitle: "Fluxo guiado<br>para o cliente.",
+          secondSubtitle: "A equipe acompanha status, pagamento e retirada.",
+          finalTitle: "Pico mais leve.<br>Operação fluindo.",
+          finalSubtitle: "Autoatendimento para vender todos os dias.",
+        },
+        "6-motivos": {
+          kicker: "produto",
+          title: "Totem não é<br>só tela bonita.",
+          subtitle: "Pedido, cadastro, triagem, Pix, status e painel.",
+          secondTitle: "6 motivos<br>para automatizar.",
+          secondSubtitle: "Padronize o fluxo e reduza retrabalho no balcão.",
+          finalTitle: "Crie seu<br>totem hoje.",
+          finalSubtitle: "Publique rápido e acompanhe no painel.",
+        },
+        "onde-usar": {
+          kicker: "casos de uso",
+          title: "Use em loja,<br>clínica e evento.",
+          subtitle: "Qualquer fluxo de toque-e-segue pode virar self-service.",
+          secondTitle: "Restaurantes,<br>recepções e varejo.",
+          secondSubtitle: "O mesmo painel organiza pedidos e status.",
+          finalTitle: "Um totem para<br>cada operação.",
+          finalSubtitle: "Tablet, web ou kiosk com a sua marca.",
+        },
+        restaurante: {
+          kicker: "restaurantes",
+          title: "Fila menor no<br>almoço e jantar.",
+          subtitle: "O cliente escolhe, revisa e paga sem travar o caixa.",
+          secondTitle: "Combo, bebida<br>e Pix guiado.",
+          secondSubtitle: "O pedido chega mais claro para a equipe.",
+          finalTitle: "Venda mais<br>no horário cheio.",
+          finalSubtitle: "AutoTotem para restaurante, balcão e delivery local.",
+        },
+        "hardware-real": {
+          kicker: "hardware real",
+          title: "Tablet e totem<br>sem improviso.",
+          subtitle: "Use um tablet real em pedestal pronto para operação.",
+          secondTitle: "Tela cheia,<br>pedido e Pix.",
+          secondSubtitle: "O AutoTotem roda no navegador, em Android ou kiosk.",
+          finalTitle: "Monte seu<br>ponto self-service.",
+          finalSubtitle: "Indique tablet, pedestal e fluxo em uma mesma venda.",
+        },
+        "pix-balcao": {
+          kicker: "pagamento guiado",
+          title: "Pix no fluxo,<br>menos conferência.",
+          subtitle: "O cliente revisa o pedido e avança para pagamento guiado.",
+          secondTitle: "Pedido fechado.<br>Status claro.",
+          secondSubtitle: "A equipe acompanha sem parar o balcão a cada dúvida.",
+          finalTitle: "Receba melhor<br>no horário cheio.",
+          finalSubtitle: "AutoTotem ajuda a padronizar pedido, pagamento e retirada.",
+        },
+        clinicas: {
+          kicker: "clínicas e recepção",
+          title: "Recepção leve<br>desde a entrada.",
+          subtitle: "Cadastro, triagem e senha sem acumular fila no balcão.",
+          secondTitle: "Check-in touch<br>para pacientes.",
+          secondSubtitle: "Dados chegam organizados antes do atendimento humano.",
+          finalTitle: "Menos fila.<br>Mais previsibilidade.",
+          finalSubtitle: "AutoTotem para recepções, clínicas e serviços presenciais.",
+        },
+        "varejo-cadastro": {
+          kicker: "varejo e cadastro",
+          title: "Cadastro sem<br>travar a venda.",
+          subtitle: "Cliente preenche dados, aceita termos e segue o fluxo.",
+          secondTitle: "Cupom, status<br>e próxima etapa.",
+          secondSubtitle: "O atendimento fica padronizado mesmo em lojas cheias.",
+          finalTitle: "Venda com<br>menos atrito.",
+          finalSubtitle: "AutoTotem para lojas, eventos, retirada e balcão.",
+        },
+        "checklist-implantacao": {
+          kicker: "implantação rápida",
+          title: "Do zero ao<br>totem publicado.",
+          subtitle: "Escolha tablet, fluxo, marca, pagamento e ponto de uso.",
+          secondTitle: "5 passos para<br>entrar no ar.",
+          secondSubtitle: "Crie a experiência, teste no tablet e publique no local.",
+          finalTitle: "Seu totem<br>pronto para vender.",
+          finalSubtitle: "AutoTotem une software, tablet e operação em loja.",
+        },
+      };
+
+      function videoScene(scene, format) {
+        const isSquare = format === "square";
+        const isWide = format === "wide";
+        const isLight = scene.theme === "light";
+        const titleSize = isWide ? "72px" : isSquare ? "74px" : "92px";
+        const visual = scene.visual === "tablet"
+          ? `<div style="height:${isWide ? 500 : isSquare ? 390 : 660}px;max-width:${isWide ? 560 : isSquare ? 520 : 620}px">${tabletMockup(isSquare)}</div>`
+          : totemMockup(isWide || isSquare ? "small" : "large", scene.visual === "ttav" ? "ttav" : "tower");
+
+        if (isWide) {
+          app.innerHTML = `
+            <main class="canvas ${isLight ? "light grid" : "dark dark-grid"}">
+              ${isLight ? "" : `<div class="blob a"></div><div class="blob b"></div>`}
+              <section class="scene" style="${sceneMotion(scene.start, scene.end)};display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:54px;padding:58px 72px">
+                <div>
+                  ${brand(!isLight)}
+                  <div class="kicker" style="font-size:20px;margin-top:72px">${scene.kicker}</div>
+                  <h1 class="headline ${isLight ? "" : "soft"}" style="font-size:${titleSize};max-width:720px;margin-top:28px">${scene.title}</h1>
+                  <p class="subtitle ${isLight ? "" : "dark"}" style="font-size:29px;max-width:680px;margin-top:28px">${scene.subtitle}</p>
+                  <div class="pill" style="height:66px;padding:0 38px;font-size:25px;margin-top:42px;background:${isLight ? "var(--ink)" : "var(--green)"};color:${isLight ? "white" : "var(--ink)"}">autototem.com.br</div>
+                </div>
+                <div>${visual}</div>
+              </section>
+            </main>
+          `;
+          return;
+        }
+
+        app.innerHTML = `
+          <main class="canvas ${isLight ? "light grid" : "dark dark-grid"}">
+            ${isLight ? "" : `<div class="blob a"></div><div class="blob b"></div>`}
+            <section class="scene" style="${sceneMotion(scene.start, scene.end)}">
+              ${brand(!isLight)}
+              <div class="kicker" style="font-size:${isSquare ? 19 : 22}px;margin-top:${isSquare ? 40 : 120}px">${scene.kicker}</div>
+              <h1 class="headline ${isLight ? "" : "soft"}" style="font-size:${titleSize};max-width:${isSquare ? 880 : 900}px">${scene.title}</h1>
+              <p class="subtitle ${isLight ? "" : "dark"}" style="font-size:${isSquare ? 29 : 36}px;max-width:850px">${scene.subtitle}</p>
+              <div style="margin-top:${isSquare ? 20 : 56}px;${isSquare ? "max-width:760px" : ""}">
+                ${visual}
+              </div>
+            </section>
+          </main>
+        `;
+      }
+
+      function renderVideo(assetName) {
+        const format = assetName.includes("youtube") ? "wide" : assetName.includes("feed") ? "square" : "vertical";
+        const key = Object.keys(campaigns).find((slug) => assetName.includes(slug)) || "fila-pico";
+        const campaign = campaigns[key];
+        const scenes = [
+          { start: 0, end: 2.7, kicker: campaign.kicker, title: campaign.title, subtitle: campaign.subtitle, visual: "tower", theme: "dark" },
+          { start: 2.55, end: 5.35, kicker: "fluxo touch", title: campaign.secondTitle, subtitle: campaign.secondSubtitle, visual: "tablet", theme: "light" },
+          { start: 5.2, end: 8.0, kicker: "autoTotem", title: campaign.finalTitle, subtitle: campaign.finalSubtitle, visual: "ttav", theme: "dark" },
+        ];
+        const scene = scenes.find((item) => renderTime >= item.start && renderTime < item.end) || scenes[scenes.length - 1];
+        videoScene(scene, format);
+      }
+
+      function render() {
+        if (asset === "instagram-post-fila") return staticSquare();
+        if (asset === "instagram-story-cardapio") return staticStory();
+        if (asset === "facebook-post-operacao") return staticFacebook();
+        if (asset === "youtube-thumb-demo") return staticYoutube();
+        return renderVideo(asset);
+      }
+
+      render();
+    </script>
+  </body>
+</html>

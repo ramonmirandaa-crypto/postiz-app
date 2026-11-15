@@ -5,6 +5,7 @@ import { internalFetch } from '@gitroom/helpers/utils/internal.fetch';
 import acceptLanguage from 'accept-language';
 import {
   cookieName,
+  fallbackLng,
   headerName,
   languages,
 } from '@gitroom/react/translation/i18n.config';
@@ -17,12 +18,7 @@ export async function proxy(request: NextRequest) {
     request.cookies.get('auth') ||
     request.headers.get('auth') ||
     nextUrl.searchParams.get('loggedAuth');
-  const lng = request.cookies.has(cookieName)
-    ? acceptLanguage.get(request.cookies.get(cookieName).value)
-    : acceptLanguage.get(
-        request.headers.get('Accept-Language') ||
-          request.headers.get('accept-language')
-      );
+  const lng = fallbackLng;
 
   const requestHeaders = new Headers(request.headers);
   if (lng) {
@@ -37,6 +33,10 @@ export async function proxy(request: NextRequest) {
 
   if (lng) {
     topResponse.headers.set(cookieName, lng);
+    topResponse.cookies.set(cookieName, lng, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365,
+    });
   }
 
   if (nextUrl.pathname.startsWith('/modal/') && !authCookie) {
